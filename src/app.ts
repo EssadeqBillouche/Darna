@@ -1,4 +1,5 @@
 import express, { type Application, type Request, type Response } from 'express';
+import authRoutes from './presentation/routes/auth.routes';
 
 class App {
 	private readonly app: Application;
@@ -17,6 +18,7 @@ class App {
 		this.app.get('/', (req: Request, res: Response) => {
 			res.json({ status: 'ok' });
 		});
+		this.app.use('/api', authRoutes);
 	}
 
 	get instance() {
