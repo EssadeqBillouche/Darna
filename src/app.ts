@@ -1,9 +1,29 @@
-import express from "express"
-import dotenv from "dotenv"
+import express, { type Application, type Request, type Response } from 'express';
 
-const app = express();
-dotenv.config();
+class App {
+	private readonly app: Application;
 
+	constructor() {
+		this.app = express();
+		this.configureMiddleware();
+		this.configureRoutes();
+	}
 
+	private configureMiddleware() {
+		this.app.use(express.json());
+	}
 
-export default app;
+	private configureRoutes() {
+		this.app.get('/', (req: Request, res: Response) => {
+			res.json({ status: 'ok' });
+		});
+	}
+
+	get instance() {
+		return this.app;
+	}
+}
+
+export const createApp = () => new App().instance;
+
+export default App;
