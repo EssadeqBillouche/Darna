@@ -93,7 +93,21 @@ export class User {
   private touch(): void {
     this._updatedAt = new Date();
   }
-
+  public toPersistence(): any {
+    return {
+      email: this.email,
+      passwordHash: this._passwordHash,  // include hash
+      firstName: this._firstName,
+      lastName: this._lastName,
+      phoneNumber: this._phoneNumber,
+      profilePicture: this._profilePicture,
+      role: this._role,
+      isVerified: this._isVerified,
+      status: this._status,
+      createdAt: this.createdAt,
+      updatedAt: this._updatedAt,
+    };
+  }
   public toJSON(): UserDTO {
     return {
       id: this.id,
