@@ -2,7 +2,7 @@ import express, { type Application, type Request, type Response } from 'express'
 import authRoutes from './presentation/routes/auth.routes';
 
 class App {
-	private readonly app: Application;
+	private app: Application;
 
 	constructor() {
 		this.app = express();
