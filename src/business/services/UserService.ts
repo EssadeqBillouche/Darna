@@ -1,44 +1,81 @@
+import { randomBytes } from 'crypto';
 import { User } from '../../business/entities/User';
 import { UserRole } from '../../business/enums/Role';
 import UserRepository from '../../persistence/repositories/UserRepository';
+import { EmailService } from '../../infrastructure/notifications/email.service';
+import { UserDTO } from '../types/User';
 
 export class UserService {
-    private UserRepository : UserRepository;
+    private verificationTokenTTL = 1000 * 60 * 60 * 24; // 24 hours in ms
 
-    constructor(UserRepository: UserRepository) {
-        this.UserRepository = UserRepository;
-    }
+    constructor(
+        private userRepository: UserRepository,
+        private emailService: EmailService,
+    ) {}
 
-    async register(data: {
+    public async register(data: {
         email: string;
         password: string;
         firstName: string;
         lastName: string;
         phoneNumber?: string;
         role: UserRole;
-    }) : Promise<User> {
-        try {
-            const existing = await this.UserRepository.findByEmail(data.email);
-            if (existing) throw new Error('Email already exists');
-    
-            const userEntity = await User.create({
-                email: data.email,
-                password: data.password,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                phoneNumber: data.phoneNumber ?? '',
-                role: data.role,
-                isVerified: false,
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            
-    
-            const savedUser = await this.UserRepository.create(userEntity);
-            return savedUser.toPersistence();
-        } catch (error: any) {
-            throw new Error(`Error: ${error.message}`)
+    }): Promise<UserDTO> {
+        const existing = await this.userRepository.findByEmail(data.email);
+        if (existing) throw new Error('Email already exists');
+
+        const userEntity = await User.create({
+            email: data.email,
+            password: data.password,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phoneNumber: data.phoneNumber ?? '',
+            role: data.role,
+            isVerified: false,
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        const verificationToken = this.generateVerificationToken();
+        const verificationExpiresAt = this.getVerificationExpiry();
+        userEntity.setVerificationToken(verificationToken, verificationExpiresAt);
+
+        const savedUser = await this.userRepository.create(userEntity);
+
+        await this.emailService.sendVerificationEmail({
+            to: savedUser.email,
+            firstName: savedUser.firstName,
+            token: verificationToken,
+            expiresAt: verificationExpiresAt,
+        });
+
+        return savedUser.toJSON();
+    }
+
+    public async verifyEmail(token: string): Promise<UserDTO> {
+        if (!token) throw new Error('Verification token is required');
+
+        const user = await this.userRepository.findByVerificationToken(token);
+        if (!user) throw new Error('Invalid verification token');
+
+        const expiresAt = user.verificationTokenExpiresAt;
+        if (!expiresAt || expiresAt.getTime() < Date.now()) {
+            user.clearVerificationToken();
+            await this.userRepository.update(user);
+            throw new Error('Verification token has expired');
         }
+
+        user.verifyEmail();
+        const updatedUser = await this.userRepository.update(user);
+        return updatedUser.toJSON();
+    }
+
+    private generateVerificationToken(): string {
+        return randomBytes(32).toString('hex');
+    }
+
+    private getVerificationExpiry(): Date {
+        return new Date(Date.now() + this.verificationTokenTTL);
     }
 }

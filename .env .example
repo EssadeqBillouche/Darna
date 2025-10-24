@@ -11,8 +11,13 @@ MINIO_BUCKET=realestate-media
 
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
+EMAIL_SECURE=false
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_password
+EMAIL_FROM="Darna <no-reply@darna.local>"
+EMAIL_VERIFICATION_URL=http://localhost:3000/api/auth/verify-email
+
+APP_URL=http://localhost:3000
 
 LLM_API_KEY=your_ai_api_key
 TIRELIRE_API_URL=

@@ -3,7 +3,7 @@ import authRoutes from './presentation/routes/auth.routes';
 import userRoutes from './presentation/routes/users.routes';
 
 class App {
-	private readonly app: Application;
+	private app: Application;
 
 	constructor() {
 		this.app = express();
