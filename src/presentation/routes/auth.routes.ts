@@ -3,12 +3,12 @@ import express from 'express';
 const router = express.Router();
 
 import UserRepository from '../../persistence/repositories/UserRepository';
-import { AuthService } from '../../business/services/AuthService';
-import { AuthController } from '../controllers/AuthController';
+import { UserService } from '../../business/services/UserService';
+import { UserController } from '../controllers/UserController';
 
 const userRepository = new UserRepository();
-const authService = new AuthService(userRepository);
-const authController = new AuthController(authService);
+const authService = new UserService(userRepository);
+const authController = new UserController(authService);
 
 router.post('/register', authController.register.bind(authController));
 
