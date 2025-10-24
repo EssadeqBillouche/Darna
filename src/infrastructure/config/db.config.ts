@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import mongoose, { type ConnectOptions, type Connection } from "mongoose";
+import mongoose, { type Connection } from "mongoose";
 
 dotenv.config();
 
@@ -10,8 +10,8 @@ export const mongoUri = process.env.MONGODB_URI ?? DEFAULT_URI;
 export class MongoDatabase {
   private static instance: MongoDatabase | null = null;
 
-  private readonly uri: string;
-  private readonly conn: Connection;
+  private uri: string;
+  private conn: Connection;
 
   private constructor(uri: string) {
     this.uri = uri;
