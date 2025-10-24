@@ -23,7 +23,7 @@ class UserRepository {
       });
       return new User(saved.toObject() as UserProps);
     } catch (error: any) {
-      throw new Error(`Error: ${error.message}`)
+      throw new Error(error.message)
     }
   }
 }
