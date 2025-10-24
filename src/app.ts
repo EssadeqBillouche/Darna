@@ -1,8 +1,9 @@
 import express, { type Application, type Request, type Response } from 'express';
 import authRoutes from './presentation/routes/auth.routes';
+import userRoutes from './presentation/routes/users.routes';
 
 class App {
-	private readonly app: Application;
+	private app: Application;
 
 	constructor() {
 		this.app = express();
@@ -14,6 +15,7 @@ class App {
 			res.json({ status: 'ok' });
 		});
 		this.app.use('/api', authRoutes);
+		this.app.use('/api', userRoutes);
 	}
 
 	get instance() {

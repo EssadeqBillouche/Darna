@@ -11,6 +11,8 @@ export interface UserProps {
   isVerified: boolean;
   profilePicture?: string;
   status: 'active' | 'suspended' | 'deleted';
+  verificationToken?: string | null;
+  verificationTokenExpiresAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
