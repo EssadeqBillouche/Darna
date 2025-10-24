@@ -44,7 +44,7 @@ class UserRepository {
       if (!entity) throw new Error('Failed to create user');
       return entity;
     } catch (error: any) {
-      throw new Error(`Error: ${error.message}`);
+      throw new Error(error.message)
     }
   }
 

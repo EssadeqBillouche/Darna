@@ -6,12 +6,7 @@ class App {
 
 	constructor() {
 		this.app = express();
-		this.configureMiddleware();
 		this.configureRoutes();
-	}
-
-	private configureMiddleware() {
-		this.app.use(express.json());
 	}
 
 	private configureRoutes() {
