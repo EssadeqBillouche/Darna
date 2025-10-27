@@ -4,17 +4,17 @@ import dotenv from 'dotenv'
 
 dotenv.config();
 
-interface JwtPayload {
+export interface JwtPayload {
     id?: string;
     email: string;
     firstName: string;
     lastName: string;
     role: string;
-    status: string;
+    status : string;
     isVerified: boolean;
 }
 
-class JwtService {
+export default class JwtService {
     private readonly secretKey: string;
     private readonly expiresIn: string;
 
@@ -41,7 +41,7 @@ class JwtService {
             isVerified: userData.isVerified
         };
         
-        return jwt.sign(payload, this.secretKey, { expiresIn: '7d' });
+        return await jwt.sign(payload, this.secretKey, { expiresIn: '7d' });
     }
 
     async verifyToken(token: string): Promise<JwtPayload> {
@@ -56,6 +56,25 @@ class JwtService {
             throw new Error('Token verification failed');
         }
     }
+
+    async generateRefreshToken(userData: UserDTO): Promise<string> {
+        const payload: JwtPayload = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role,
+            status: userData.status,
+            isVerified: userData.isVerified
+        };
+        
+        const options: jwt.SignOptions = {
+            expiresIn: '30d'
+        };
+        
+        return jwt.sign(payload, this.secretKey, options);
+    }
+
+
 }
 
-export default new JwtService();
