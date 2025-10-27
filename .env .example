@@ -1,0 +1,23 @@
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/darna
+JWT_SECRET=my_super_secret_key
+JWT_EXPIRES_IN=7d
+
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=realestate-media
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_password
+EMAIL_FROM="Darna <no-reply@darna.local>"
+EMAIL_VERIFICATION_URL=http://localhost:3000/api/auth/verify-email
+
+APP_URL=http://localhost:3000
+
+LLM_API_KEY=your_ai_api_key
+TIRELIRE_API_URL=
