@@ -6,6 +6,20 @@ const coordinateSetter = (value?: number) => {
 	return Number(value.toFixed(6));
 };
 
+const nonNegativeNumberSetter = (value?: number) => {
+	if (value === undefined || value === null) return undefined;
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+	return Number(parsed.toFixed(2));
+};
+
+const nonNegativeIntegerSetter = (value?: number) => {
+	if (value === undefined || value === null) return undefined;
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+	return Math.floor(parsed);
+};
+
 const CoordinatesSchema = new Schema(
 	{
 		latitude: {
@@ -93,6 +107,45 @@ const CharacteristicsSchema = new Schema(
 	{ _id: false },
 );
 
+const EnergyDiagnosticSchema = new Schema(
+	{
+		rating: { type: String, enum: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] },
+		consumption: { type: Number, min: 0, set: nonNegativeNumberSetter },
+		emissionRating: { type: String, enum: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] },
+		emissions: { type: Number, min: 0, set: nonNegativeNumberSetter },
+		inspectionDate: { type: Date },
+		validUntil: { type: Date },
+		reference: { type: String, trim: true },
+	},
+	{ _id: false },
+);
+
+const RulesSchema = new Schema(
+	{
+		furnished: { type: Boolean },
+		petsAllowed: { type: Boolean },
+		smokingAllowed: { type: Boolean },
+		childrenAllowed: { type: Boolean },
+		eventsAllowed: { type: Boolean },
+		minimumLeaseTermMonths: {
+			type: Number,
+			min: 0,
+			set: nonNegativeIntegerSetter,
+		},
+		maximumOccupants: {
+			type: Number,
+			min: 0,
+			set: nonNegativeIntegerSetter,
+		},
+		customRules: {
+			type: [String],
+			default: undefined,
+			set: (values: string[]) => normalizeStringArray(values),
+		},
+	},
+	{ _id: false },
+);
+
 const BienSchema = new Schema<BienProps>(
 	{
 		ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true } as any,
@@ -112,6 +165,8 @@ const BienSchema = new Schema<BienProps>(
 		},
 		location: { type: LocationSchema, required: true },
 		characteristics: { type: CharacteristicsSchema, default: {} },
+		energyDiagnostic: { type: EnergyDiagnosticSchema, default: undefined },
+		rules: { type: RulesSchema, default: undefined },
 		amenities: {
 			type: [String],
 			default: [],

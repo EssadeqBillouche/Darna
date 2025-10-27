@@ -49,6 +49,29 @@ export interface PropertyCharacteristics {
 	area?: PropertyArea;
 }
 
+export type EnergyRating = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+
+export interface EnergyDiagnostic {
+	rating?: EnergyRating;
+	consumption?: number;
+	emissionRating?: EnergyRating;
+	emissions?: number;
+	inspectionDate?: Date;
+	validUntil?: Date;
+	reference?: string;
+}
+
+export interface PropertyRules {
+	furnished?: boolean;
+	petsAllowed?: boolean;
+	smokingAllowed?: boolean;
+	childrenAllowed?: boolean;
+	eventsAllowed?: boolean;
+	minimumLeaseTermMonths?: number;
+	maximumOccupants?: number;
+	customRules?: string[];
+}
+
 export interface PropertyLocationCoordinates {
 	latitude: number;
 	longitude: number;
@@ -85,6 +108,8 @@ export interface BienProps {
 	status?: PropertyStatus;
 	location: PropertyLocation;
 	characteristics?: PropertyCharacteristics;
+	energyDiagnostic?: EnergyDiagnostic;
+	rules?: PropertyRules;
 	amenities?: string[];
 	media?: string[];
 	tags?: string[];
@@ -103,6 +128,8 @@ export interface BienDTO {
 	status: PropertyStatus;
 	location: PropertyLocation;
 	characteristics: PropertyCharacteristics;
+	energyDiagnostic?: EnergyDiagnostic;
+	rules?: PropertyRules;
 	amenities: string[];
 	media: string[];
 	tags: string[];
@@ -121,6 +148,8 @@ export interface BienUpdatePayload {
 	media?: string[];
 	tags?: string[];
 	characteristics?: PropertyCharacteristics;
+	energyDiagnostic?: EnergyDiagnostic | null;
+	rules?: PropertyRules | null;
 }
 
 export interface BienCreationPayload {
@@ -133,6 +162,8 @@ export interface BienCreationPayload {
 	status?: PropertyStatus;
 	location: PropertyLocation;
 	characteristics?: PropertyCharacteristics;
+	energyDiagnostic?: EnergyDiagnostic;
+	rules?: PropertyRules;
 	amenities?: string[];
 	media?: string[];
 	tags?: string[];

@@ -7,6 +7,8 @@ import {
 	PropertyLocation,
 	PropertyLocationCoordinates,
 	PropertyLocationUpdate,
+	EnergyDiagnostic,
+	PropertyRules,
 	PropertyStatus,
 	PropertyType,
 } from '../types/Bien';
@@ -23,6 +25,21 @@ const cloneCharacteristics = (source?: PropertyCharacteristics): PropertyCharact
 	return clone;
 };
 
+const cloneEnergyDiagnostic = (source?: EnergyDiagnostic): EnergyDiagnostic | undefined => {
+	if (!source) return undefined;
+	const clone: EnergyDiagnostic = { ...source };
+	if (source.inspectionDate) clone.inspectionDate = new Date(source.inspectionDate);
+	if (source.validUntil) clone.validUntil = new Date(source.validUntil);
+	return clone;
+};
+
+const cloneRules = (source?: PropertyRules): PropertyRules | undefined => {
+	if (!source) return undefined;
+	const clone: PropertyRules = { ...source };
+	if (source.customRules) clone.customRules = [...source.customRules];
+	return clone;
+};
+
 const COORDINATE_PRECISION = 6;
 
 const normalizeStringArray = (values?: string[]): string[] => {
@@ -30,6 +47,131 @@ const normalizeStringArray = (values?: string[]): string[] => {
 	return values
 		.map((value) => value.trim())
 		.filter((value, index, self) => value.length > 0 && self.indexOf(value) === index);
+};
+
+const ENERGY_NUMBER_PRECISION = 2;
+
+const sanitizeNonNegativeNumber = (value: number, field: string): number => {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed)) throw new Error(`${field} must be a valid number`);
+	if (parsed < 0) throw new Error(`${field} must be greater than or equal to 0`);
+	const factor = 10 ** ENERGY_NUMBER_PRECISION;
+	return Math.round(parsed * factor) / factor;
+};
+
+const sanitizePositiveInteger = (value: number, field: string): number => {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed)) throw new Error(`${field} must be a valid number`);
+	if (parsed < 0) throw new Error(`${field} must be greater than or equal to 0`);
+	return Math.floor(parsed);
+};
+
+const ensureDateValue = (value: Date | string, field: string): Date => {
+	const date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+	if (Number.isNaN(date.getTime())) throw new Error(`${field} must be a valid date`);
+	return date;
+};
+
+const normalizeEnergyDiagnostic = (
+	diagnostic?: EnergyDiagnostic | null,
+): EnergyDiagnostic | undefined => {
+	if (!diagnostic) return undefined;
+	const normalized: EnergyDiagnostic = {};
+	let hasValue = false;
+
+	if (diagnostic.rating) {
+		normalized.rating = diagnostic.rating;
+		hasValue = true;
+	}
+
+	if (diagnostic.consumption !== undefined) {
+		normalized.consumption = sanitizeNonNegativeNumber(diagnostic.consumption, 'consumption');
+		hasValue = true;
+	}
+
+	if (diagnostic.emissionRating) {
+		normalized.emissionRating = diagnostic.emissionRating;
+		hasValue = true;
+	}
+
+	if (diagnostic.emissions !== undefined) {
+		normalized.emissions = sanitizeNonNegativeNumber(diagnostic.emissions, 'emissions');
+		hasValue = true;
+	}
+
+	if (diagnostic.inspectionDate) {
+		normalized.inspectionDate = ensureDateValue(diagnostic.inspectionDate, 'inspectionDate');
+		hasValue = true;
+	}
+
+	if (diagnostic.validUntil) {
+		normalized.validUntil = ensureDateValue(diagnostic.validUntil, 'validUntil');
+		hasValue = true;
+	}
+
+	if (diagnostic.reference !== undefined) {
+		const trimmed = diagnostic.reference?.trim();
+		if (trimmed) {
+			normalized.reference = trimmed;
+			hasValue = true;
+		}
+	}
+
+	return hasValue ? normalized : undefined;
+};
+
+const normalizeRules = (rules?: PropertyRules | null): PropertyRules | undefined => {
+	if (!rules) return undefined;
+	const normalized: PropertyRules = {};
+	let hasValue = false;
+
+	if (rules.furnished !== undefined) {
+		normalized.furnished = rules.furnished;
+		hasValue = true;
+	}
+
+	if (rules.petsAllowed !== undefined) {
+		normalized.petsAllowed = rules.petsAllowed;
+		hasValue = true;
+	}
+
+	if (rules.smokingAllowed !== undefined) {
+		normalized.smokingAllowed = rules.smokingAllowed;
+		hasValue = true;
+	}
+
+	if (rules.childrenAllowed !== undefined) {
+		normalized.childrenAllowed = rules.childrenAllowed;
+		hasValue = true;
+	}
+
+	if (rules.eventsAllowed !== undefined) {
+		normalized.eventsAllowed = rules.eventsAllowed;
+		hasValue = true;
+	}
+
+	if (rules.minimumLeaseTermMonths !== undefined) {
+		normalized.minimumLeaseTermMonths = sanitizePositiveInteger(
+			rules.minimumLeaseTermMonths,
+			'minimumLeaseTermMonths',
+		);
+		hasValue = true;
+	}
+
+	if (rules.maximumOccupants !== undefined) {
+		normalized.maximumOccupants = sanitizePositiveInteger(
+			rules.maximumOccupants,
+			'maximumOccupants',
+		);
+		hasValue = true;
+	}
+
+	if (rules.customRules !== undefined) {
+		normalized.customRules = normalizeStringArray(rules.customRules);
+		hasValue = true;
+	}
+
+	return hasValue ? normalized : undefined;
 };
 
 const ensureRequiredString = (value: string | undefined, field: string): string => {
@@ -143,6 +285,46 @@ const mergeCharacteristics = (
 	return next;
 };
 
+const mergeEnergyDiagnostic = (
+	current: EnergyDiagnostic | undefined,
+	updates: EnergyDiagnostic,
+): EnergyDiagnostic | undefined => {
+	const normalizedUpdates = normalizeEnergyDiagnostic(updates);
+	if (!normalizedUpdates) return cloneEnergyDiagnostic(current);
+	const base = cloneEnergyDiagnostic(current) ?? {};
+	const merged: EnergyDiagnostic = {
+		...base,
+		...normalizedUpdates,
+	};
+
+	if (base.inspectionDate) merged.inspectionDate = new Date(base.inspectionDate);
+	if (normalizedUpdates.inspectionDate) merged.inspectionDate = new Date(normalizedUpdates.inspectionDate);
+	if (base.validUntil) merged.validUntil = new Date(base.validUntil);
+	if (normalizedUpdates.validUntil) merged.validUntil = new Date(normalizedUpdates.validUntil);
+
+	return merged;
+};
+
+const mergeRules = (
+	current: PropertyRules | undefined,
+	updates: PropertyRules,
+): PropertyRules | undefined => {
+	const normalizedUpdates = normalizeRules(updates);
+	if (!normalizedUpdates) return cloneRules(current);
+	const base = cloneRules(current) ?? {};
+	const merged: PropertyRules = {
+		...base,
+		...normalizedUpdates,
+	};
+
+	if (base.customRules) merged.customRules = [...base.customRules];
+	if (normalizedUpdates.customRules !== undefined) {
+		merged.customRules = [...normalizedUpdates.customRules];
+	}
+
+	return merged;
+};
+
 export class Bien {
 	public readonly id?: string;
 	public readonly ownerId: string;
@@ -156,6 +338,8 @@ export class Bien {
 	private _status: PropertyStatus;
 	private _location: PropertyLocation;
 	private _characteristics: PropertyCharacteristics;
+	private _energyDiagnostic?: EnergyDiagnostic;
+	private _rules?: PropertyRules;
 	private _amenities: string[];
 	private _media: string[];
 	private _tags: string[];
@@ -172,6 +356,8 @@ export class Bien {
 		this._status = props.status ?? DEFAULT_STATUS;
 		this._location = normalizeLocation(props.location);
 		this._characteristics = cloneCharacteristics(props.characteristics);
+		this._energyDiagnostic = normalizeEnergyDiagnostic(props.energyDiagnostic);
+		this._rules = normalizeRules(props.rules);
 		this._amenities = normalizeStringArray(props.amenities);
 		this._media = normalizeStringArray(props.media);
 		this._tags = normalizeStringArray(props.tags);
@@ -190,6 +376,8 @@ export class Bien {
 			status: payload.status ?? DEFAULT_STATUS,
 			location: payload.location,
 			characteristics: payload.characteristics ?? {},
+			energyDiagnostic: payload.energyDiagnostic,
+			rules: payload.rules,
 			amenities: payload.amenities ?? [],
 			media: payload.media ?? [],
 			tags: payload.tags ?? [],
@@ -241,6 +429,14 @@ export class Bien {
 		return cloneCharacteristics(this._characteristics);
 	}
 
+	public get energyDiagnostic(): EnergyDiagnostic | undefined {
+		return cloneEnergyDiagnostic(this._energyDiagnostic);
+	}
+
+	public get rules(): PropertyRules | undefined {
+		return cloneRules(this._rules);
+	}
+
 	public get amenities(): string[] {
 		return [...this._amenities];
 	}
@@ -283,6 +479,36 @@ export class Bien {
 		if (payload.status && payload.status !== this._status) {
 			this._status = payload.status;
 			modified = true;
+		}
+
+		if (payload.energyDiagnostic !== undefined) {
+			if (payload.energyDiagnostic === null) {
+				if (this._energyDiagnostic) {
+					this._energyDiagnostic = undefined;
+					modified = true;
+				}
+			} else {
+				const mergedDiagnostic = mergeEnergyDiagnostic(this._energyDiagnostic, payload.energyDiagnostic);
+				if (!energyDiagnosticsAreEqual(mergedDiagnostic, this._energyDiagnostic)) {
+					this._energyDiagnostic = mergedDiagnostic;
+					modified = true;
+				}
+			}
+		}
+
+		if (payload.rules !== undefined) {
+			if (payload.rules === null) {
+				if (this._rules) {
+					this._rules = undefined;
+					modified = true;
+				}
+			} else {
+				const mergedRules = mergeRules(this._rules, payload.rules);
+				if (!rulesAreEqual(mergedRules, this._rules)) {
+					this._rules = mergedRules;
+					modified = true;
+				}
+			}
 		}
 
 		if (payload.location) {
@@ -393,6 +619,8 @@ export class Bien {
 			status: this._status,
 			location: this.location,
 			characteristics: this.characteristics,
+			energyDiagnostic: this.energyDiagnostic,
+			rules: this.rules,
 			amenities: [...this._amenities],
 			media: [...this._media],
 			tags: [...this._tags],
@@ -413,6 +641,8 @@ export class Bien {
 			status: this._status,
 			location: this.location,
 			characteristics: this.characteristics,
+			energyDiagnostic: this.energyDiagnostic,
+			rules: this.rules,
 			amenities: [...this._amenities],
 			media: [...this._media],
 			tags: [...this._tags],
@@ -435,6 +665,33 @@ const compareCharacteristics = (
 	next: PropertyCharacteristics,
 ): boolean => {
 	return JSON.stringify(previous) === JSON.stringify(next);
+};
+
+const serializeEnergyDiagnostic = (value?: EnergyDiagnostic): string => {
+	const clone = cloneEnergyDiagnostic(value);
+	if (!clone) return '';
+	const payload: Record<string, unknown> = { ...clone };
+	if (clone.inspectionDate) payload.inspectionDate = clone.inspectionDate.toISOString();
+	if (clone.validUntil) payload.validUntil = clone.validUntil.toISOString();
+	return JSON.stringify(payload);
+};
+
+const serializeRules = (value?: PropertyRules): string => {
+	const clone = cloneRules(value);
+	if (!clone) return '';
+	if (clone.customRules) clone.customRules = [...clone.customRules];
+	return JSON.stringify(clone);
+};
+
+const energyDiagnosticsAreEqual = (
+	first?: EnergyDiagnostic,
+	second?: EnergyDiagnostic,
+): boolean => {
+	return serializeEnergyDiagnostic(first) === serializeEnergyDiagnostic(second);
+};
+
+const rulesAreEqual = (first?: PropertyRules, second?: PropertyRules): boolean => {
+	return serializeRules(first) === serializeRules(second);
 };
 
 const coordinatesAreEqual = (
