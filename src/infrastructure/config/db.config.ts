@@ -10,8 +10,8 @@ export const mongoUri = process.env.MONGODB_URI ?? DEFAULT_URI;
 export class MongoDatabase {
   private static instance: MongoDatabase | null = null;
 
-  private uri: string;
-  private conn: Connection;
+  private readonly uri: string;
+  private readonly conn: Connection;
 
   private constructor(uri: string) {
     this.uri = uri;

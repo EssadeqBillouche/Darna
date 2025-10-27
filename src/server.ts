@@ -4,8 +4,8 @@ import { createApp } from './app';
 import { connectToDatabase, disconnectFromDatabase, isDatabaseConnected } from './infrastructure/config/db.config';
 
 class Server {
-	private port: number;
-	private app: Application;
+	private readonly port: number;
+	private readonly app: Application;
 
 	constructor(app: Application = createApp(), port: number = Number(process.env.PORT ?? 3000)) {
 		this.app = app;
