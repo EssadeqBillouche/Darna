@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs';
 
 
 export class User {
-    public readonly id?: string;
-    public readonly email: string;
-    public readonly createdAt: Date;
+    public id?: string;
+    public email: string;
+    public createdAt: Date;
 
     private _firstName: string;
     private _lastName: string;
@@ -17,6 +17,8 @@ export class User {
     private _status: 'active' | 'suspended' | 'deleted';
     private _updatedAt: Date;
     private _passwordHash: string;
+    private _verificationToken?: string | null;
+    private _verificationTokenExpiresAt?: Date | null;
 
     public constructor(props: UserProps) {
         this.id = props.id;
@@ -31,6 +33,8 @@ export class User {
         this._passwordHash = props.password;
         this.createdAt = props.createdAt ?? new Date();
         this._updatedAt = props.updatedAt ?? new Date();
+        this._verificationToken = props.verificationToken ?? null;
+        this._verificationTokenExpiresAt = props.verificationTokenExpiresAt ?? null;
     }
 
     public static async create(props: Omit<UserProps, 'password'> & { password: string }): Promise<User> {
@@ -47,6 +51,9 @@ export class User {
     public get isVerified(): boolean { return this._isVerified; }
     public get status(): 'active' | 'suspended' | 'deleted' { return this._status; }
     public get updatedAt(): Date { return this._updatedAt; }
+    public get verificationToken(): string | null | undefined { return this._verificationToken; }
+    public get verificationTokenExpiresAt(): Date | null | undefined { return this._verificationTokenExpiresAt; }
+    public get passwordHash(): string { return this._passwordHash; }
 
     public updateProfile(data: {
         firstName?: string;
@@ -64,7 +71,21 @@ export class User {
     public verifyEmail(): void {
         if (this._isVerified) return;
         this._isVerified = true;
+        this.clearVerificationToken(false);
         this.touch();
+    }
+
+    public setVerificationToken(token: string, expiresAt: Date): void {
+        this._verificationToken = token;
+        this._verificationTokenExpiresAt = expiresAt;
+        this._isVerified = false;
+        this.touch();
+    }
+
+    public clearVerificationToken(markUpdated = true): void {
+        this._verificationToken = null;
+        this._verificationTokenExpiresAt = null;
+        if (markUpdated) this.touch();
     }
 
     public suspend(): void {
@@ -97,7 +118,7 @@ export class User {
     public toPersistence(): any {
         return {
             email: this.email,
-            passwordHash: this._passwordHash,
+            password: this._passwordHash,
             firstName: this._firstName,
             lastName: this._lastName,
             phoneNumber: this._phoneNumber,
@@ -107,6 +128,8 @@ export class User {
             status: this._status,
             createdAt: this.createdAt,
             updatedAt: this._updatedAt,
+            verificationToken: this._verificationToken ?? null,
+            verificationTokenExpiresAt: this._verificationTokenExpiresAt ?? null,
         };
     }
 

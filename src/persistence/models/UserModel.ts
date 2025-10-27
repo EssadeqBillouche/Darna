@@ -12,6 +12,8 @@ const UserSchema = new mongoose.Schema<UserProps>({
     isVerified: { type: Boolean, default: false },
     profilePicture: String,
     status : { type: String, enum: ["active", "suspended", "deleted"], default: "active" },
+    verificationToken: { type: String, default: null },
+    verificationTokenExpiresAt: { type: Date, default: null },
 }, { timestamps: true });
 
 export const UserModel = mongoose.model('User', UserSchema);
