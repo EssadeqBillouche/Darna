@@ -14,8 +14,8 @@ class App {
 		this.app.get('/', (req: Request, res: Response) => {
 			res.json({ status: 'ok' });
 		});
-		this.app.use('/api', authRoutes);
-		this.app.use('/api', userRoutes);
+		this.app.use('/api-v1/auth', authRoutes);
+		this.app.use('/api-v1/user', userRoutes);
 	}
 
 	get instance() {
