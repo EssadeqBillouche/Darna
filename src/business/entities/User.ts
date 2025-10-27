@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs';
 
 
 export class User {
-    public id?: string;
-    public email: string;
-    public createdAt: Date;
+    public readonly id?: string;
+    public readonly email: string;
+    public readonly createdAt: Date;
 
     private _firstName: string;
     private _lastName: string;
@@ -118,7 +118,7 @@ export class User {
     public toPersistence(): any {
         return {
             email: this.email,
-            password: this._passwordHash,
+            passwordHash: this._passwordHash,
             firstName: this._firstName,
             lastName: this._lastName,
             phoneNumber: this._phoneNumber,
