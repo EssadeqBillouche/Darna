@@ -37,7 +37,6 @@ export class UserController {
         try {
             const userId : string = req.params.userId;
             const status : string = req.body.status;
-            console.log(status);
 
             const user = await this.userService.changeUserStatus(userId, status);
             res.status(200).json({ message: 'User status updated successfully', user });

@@ -83,7 +83,6 @@ export class UserService {
     public async changeUserStatus(userId : string, status: string) : Promise<UserDTO> {
         if(!userId) throw new Error('Cannot update user status without an identifier')
         const user : User = await this.userRepository.getUserById(userId);
-    console.log(user);
     
         if(status === 'active') {
             user.activate();
