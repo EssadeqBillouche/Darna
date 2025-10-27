@@ -19,7 +19,7 @@ class JwtService {
     private readonly expiresIn: string;
 
     constructor() {
-        const secret = process.env.JWT_SECRET;
+        const secret = process.env.JWT_SECRET || '18233789';
         const expires = process.env.JWT_EXPIRES_IN;
         
         if (!secret) {
