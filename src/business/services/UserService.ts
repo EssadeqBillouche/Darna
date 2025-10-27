@@ -41,7 +41,7 @@ export class UserService {
         const verificationToken = this.generateVerificationToken();
         const verificationExpiresAt = this.getVerificationExpiry();
         userEntity.setVerificationToken(verificationToken, verificationExpiresAt);
-
+        
         const savedUser = await this.userRepository.create(userEntity);
 
         await this.emailService.sendVerificationEmail({
@@ -117,6 +117,10 @@ export class UserService {
 
             if (user.status !== 'active') {
                 throw new Error('User account is not active');
+            }
+
+            if (user.isVerified === false) {
+                throw new Error('Your account not verified yet')
             }
             
             const token: string = await JwtService.generateToken(user.toJSON());
