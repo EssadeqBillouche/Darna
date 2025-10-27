@@ -8,6 +8,7 @@ export class HandleError {
         const errors = validationResult(req);
         console.log(errors);
         
+        
         if (!errors.isEmpty()) {
             const formattedErrors: Record<string, string> = {};
             errors.array().forEach(err => {

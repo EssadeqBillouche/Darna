@@ -1,6 +1,7 @@
 import { UserModel } from '../models/UserModel';
 import { User } from '../../business/entities/User';
-import { UserProps } from '../../business/types/User';
+import { UserDTO, UserProps } from '../../business/types/User';
+import { UserRole } from '../../business/enums/Role';
 
 class UserRepository {
 
@@ -45,6 +46,31 @@ class UserRepository {
     );
 
     if(!updated) throw new Error('User not updated')
+    return new User(updated.toObject() as UserProps);
+  }
+
+  async getUserById(userId: string) : Promise<User> {
+    const user = await UserModel.findById(userId);
+    const userData = user?.toObject();
+
+    const newObject = {
+      id: userData?._id.toString(),
+      ...userData
+    }
+    if(!user) throw new Error('User not found!'); 
+    return new User(newObject as UserProps);
+  }
+
+  async updateStatus(user: User): Promise<User> {
+    const persistence = user.toPersistence();
+    
+    const updated = await UserModel.findByIdAndUpdate(
+      user.id,
+      persistence,
+      { new: true }
+    );
+    
+    if(!updated) throw new Error('User not updated'); 
     return new User(updated.toObject() as UserProps);
   }
 }

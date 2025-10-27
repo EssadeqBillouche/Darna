@@ -1,5 +1,4 @@
 import express, { type Application, type Request, type Response } from 'express';
-import authRoutes from './presentation/routes/auth.routes';
 import userRoutes from './presentation/routes/users.routes';
 
 class App {
@@ -11,11 +10,7 @@ class App {
 	}
 
 	private configureRoutes() {
-		this.app.get('/', (req: Request, res: Response) => {
-			res.json({ status: 'ok' });
-		});
-		this.app.use('/api', authRoutes);
-		this.app.use('/api', userRoutes);
+		this.app.use('/api-v1/user', userRoutes);
 	}
 
 	get instance() {
@@ -24,5 +19,3 @@ class App {
 }
 
 export const createApp = () => new App().instance;
-
-export default App;
