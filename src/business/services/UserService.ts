@@ -80,6 +80,24 @@ export class UserService {
         return new Date(Date.now() + this.verificationTokenTTL);
     }
 
+    public async changeUserStatus(userId : string, status: string) : Promise<UserDTO> {
+        if(!userId) throw new Error('Cannot update user status without an identifier')
+        const user : User = await this.userRepository.getUserById(userId);
+    
+        if(status === 'active') {
+            user.activate();
+        } else if(status === 'suspended') {
+            user.suspend();
+        } else if(status === 'deleted') {
+            user.delete();
+        } else {
+            throw new Error('User status is invalid')
+        }
+        const updatedUser = await this.userRepository.updateStatus(user);
+
+        return updatedUser.toJSON();
+    }
+
     async login(data: {
         email: string;
         password: string;
@@ -108,6 +126,4 @@ export class UserService {
             throw new Error(`Login failed: ${error.message}`);
         }
     }
-
-   
 }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../../business/services/UserService";
+import { UserRole } from "../../business/enums/Role";
 
 export class UserController {
     private userService: UserService;
@@ -31,6 +32,21 @@ export class UserController {
             return res.status(400).json({ error: error.message });
         }
     }
+
+    public async changeUserStatus(req: Request, res: Response) {
+        try {
+            const userId : string = req.params.userId;
+            const status : string = req.body.status;
+
+            const user = await this.userService.changeUserStatus(userId, status);
+            res.status(200).json({ message: 'User status updated successfully', user });
+            
+        } catch (error: any) {
+            res.status(400).json({ error: error.message })
+        }
+
+    }
+      
     public async login(req: Request, res: Response): Promise<Response> {
         try {
             
