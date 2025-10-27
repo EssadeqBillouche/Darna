@@ -5,6 +5,8 @@ import {
 	BienCreationPayload,
 	PropertyCharacteristics,
 	PropertyLocation,
+	PropertyLocationCoordinates,
+	PropertyLocationUpdate,
 	PropertyStatus,
 	PropertyType,
 } from '../types/Bien';
@@ -21,6 +23,8 @@ const cloneCharacteristics = (source?: PropertyCharacteristics): PropertyCharact
 	return clone;
 };
 
+const COORDINATE_PRECISION = 6;
+
 const normalizeStringArray = (values?: string[]): string[] => {
 	if (!values || values.length === 0) return [];
 	return values
@@ -28,19 +32,96 @@ const normalizeStringArray = (values?: string[]): string[] => {
 		.filter((value, index, self) => value.length > 0 && self.indexOf(value) === index);
 };
 
-const normalizeLocation = (location: PropertyLocation): PropertyLocation => {
+const ensureRequiredString = (value: string | undefined, field: string): string => {
+	const trimmed = value?.trim();
+	if (!trimmed) throw new Error(`${field} is required`);
+	return trimmed;
+};
+
+const roundCoordinate = (value: number): number => {
+	const factor = 10 ** COORDINATE_PRECISION;
+	return Math.round(value * factor) / factor;
+};
+
+const normalizeCoordinates = (
+	coordinates?: PropertyLocationCoordinates | null,
+): PropertyLocationCoordinates | undefined => {
+	if (coordinates === null || coordinates === undefined) return undefined;
+	const { latitude, longitude } = coordinates;
+	if (latitude === undefined || longitude === undefined) {
+		throw new Error('Both latitude and longitude are required when coordinates are provided');
+	}
+	if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+		throw new Error('Latitude and longitude must be finite numbers');
+	}
+	if (latitude < -90 || latitude > 90) {
+		throw new Error('Latitude must be between -90 and 90 degrees');
+	}
+	if (longitude < -180 || longitude > 180) {
+		throw new Error('Longitude must be between -180 and 180 degrees');
+	}
 	return {
-		...location,
-		addressLine1: location.addressLine1.trim(),
-		addressLine2: location.addressLine2?.trim() || undefined,
-		city: location.city.trim(),
-		state: location.state?.trim(),
-		postalCode: location.postalCode.trim(),
-		country: location.country.trim(),
-		coordinates: location.coordinates
-			? { ...location.coordinates }
-			: undefined,
+		latitude: roundCoordinate(latitude),
+		longitude: roundCoordinate(longitude),
 	};
+};
+
+const normalizeLocation = (location: PropertyLocation): PropertyLocation => {
+	const normalized: PropertyLocation = {
+		addressLine1: ensureRequiredString(location.addressLine1, 'addressLine1'),
+		city: ensureRequiredString(location.city, 'city'),
+		postalCode: ensureRequiredString(location.postalCode, 'postalCode'),
+		country: ensureRequiredString(location.country, 'country'),
+	};
+
+	if (location.addressLine2) normalized.addressLine2 = location.addressLine2.trim();
+	if (location.state) normalized.state = location.state.trim();
+
+	const coordinates = normalizeCoordinates(location.coordinates);
+	if (coordinates) normalized.coordinates = coordinates;
+
+	return normalized;
+};
+
+const applyLocationUpdate = (
+	current: PropertyLocation,
+	updates: PropertyLocationUpdate,
+): PropertyLocation => {
+	const next: PropertyLocation = {
+		addressLine1: updates.addressLine1
+			? ensureRequiredString(updates.addressLine1, 'addressLine1')
+			: current.addressLine1,
+		city: updates.city ? ensureRequiredString(updates.city, 'city') : current.city,
+		postalCode: updates.postalCode
+			? ensureRequiredString(updates.postalCode, 'postalCode')
+			: current.postalCode,
+		country: updates.country
+			? ensureRequiredString(updates.country, 'country')
+			: current.country,
+	};
+
+	if (updates.addressLine2 !== undefined) {
+		next.addressLine2 = updates.addressLine2?.trim() || undefined;
+	} else if (current.addressLine2) {
+		next.addressLine2 = current.addressLine2;
+	}
+
+	if (updates.state !== undefined) {
+		next.state = updates.state?.trim() || undefined;
+	} else if (current.state) {
+		next.state = current.state;
+	}
+
+	if (updates.coordinates !== undefined) {
+		const coordinates = updates.coordinates === null
+			? undefined
+			: normalizeCoordinates(updates.coordinates);
+		if (coordinates) next.coordinates = coordinates;
+	} else if (current.coordinates) {
+		next.coordinates = { ...current.coordinates };
+	}
+
+	return next;
 };
 
 const mergeCharacteristics = (
@@ -140,7 +221,20 @@ export class Bien {
 	}
 
 	public get location(): PropertyLocation {
-		return { ...this._location, coordinates: this._location.coordinates ? { ...this._location.coordinates } : undefined };
+		const copy: PropertyLocation = {
+			addressLine1: this._location.addressLine1,
+			city: this._location.city,
+			postalCode: this._location.postalCode,
+			country: this._location.country,
+		};
+		if (this._location.addressLine2) copy.addressLine2 = this._location.addressLine2;
+		if (this._location.state) copy.state = this._location.state;
+		if (this._location.coordinates) copy.coordinates = { ...this._location.coordinates };
+		return copy;
+	}
+
+	public get coordinates(): PropertyLocationCoordinates | undefined {
+		return this._location.coordinates ? { ...this._location.coordinates } : undefined;
 	}
 
 	public get characteristics(): PropertyCharacteristics {
@@ -192,9 +286,9 @@ export class Bien {
 		}
 
 		if (payload.location) {
-			const normalisedLocation = normalizeLocation(payload.location);
-			if (JSON.stringify(normalisedLocation) !== JSON.stringify(this._location)) {
-				this._location = normalisedLocation;
+			const nextLocation = applyLocationUpdate(this._location, payload.location);
+			if (!locationsAreEqual(nextLocation, this._location)) {
+				this._location = nextLocation;
 				modified = true;
 			}
 		}
@@ -341,4 +435,27 @@ const compareCharacteristics = (
 	next: PropertyCharacteristics,
 ): boolean => {
 	return JSON.stringify(previous) === JSON.stringify(next);
+};
+
+const coordinatesAreEqual = (
+	first?: PropertyLocationCoordinates,
+	second?: PropertyLocationCoordinates,
+): boolean => {
+	if (!first && !second) return true;
+	if (!first || !second) return false;
+	return first.latitude === second.latitude && first.longitude === second.longitude;
+};
+
+const locationsAreEqual = (
+	first: PropertyLocation,
+	second: PropertyLocation,
+): boolean => {
+	if (first.addressLine1 !== second.addressLine1) return false;
+	if (first.city !== second.city) return false;
+	if (first.postalCode !== second.postalCode) return false;
+	if (first.country !== second.country) return false;
+	if ((first.addressLine2 ?? undefined) !== (second.addressLine2 ?? undefined)) return false;
+	if ((first.state ?? undefined) !== (second.state ?? undefined)) return false;
+	if (!coordinatesAreEqual(first.coordinates, second.coordinates)) return false;
+	return true;
 };

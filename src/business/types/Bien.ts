@@ -50,8 +50,8 @@ export interface PropertyCharacteristics {
 }
 
 export interface PropertyLocationCoordinates {
-	latitude?: number;
-	longitude?: number;
+	latitude: number;
+	longitude: number;
 }
 
 export interface PropertyLocation {
@@ -62,6 +62,16 @@ export interface PropertyLocation {
 	postalCode: string;
 	country: string;
 	coordinates?: PropertyLocationCoordinates;
+}
+
+export interface PropertyLocationUpdate {
+	addressLine1?: string;
+	addressLine2?: string;
+	city?: string;
+	state?: string;
+	postalCode?: string;
+	country?: string;
+	coordinates?: PropertyLocationCoordinates | null;
 }
 
 export interface BienProps {
@@ -106,7 +116,7 @@ export interface BienUpdatePayload {
 	price?: number;
 	currency?: string;
 	status?: PropertyStatus;
-	location?: PropertyLocation;
+	location?: PropertyLocationUpdate;
 	amenities?: string[];
 	media?: string[];
 	tags?: string[];

@@ -1,10 +1,27 @@
 import mongoose, { Schema } from 'mongoose';
 import { BienProps } from '../../business/types/Bien';
 
+const coordinateSetter = (value?: number) => {
+	if (value === undefined || value === null) return undefined;
+	return Number(value.toFixed(6));
+};
+
 const CoordinatesSchema = new Schema(
 	{
-		latitude: { type: Number },
-		longitude: { type: Number },
+		latitude: {
+			type: Number,
+			required: true,
+			min: -90,
+			max: 90,
+			set: coordinateSetter,
+		},
+		longitude: {
+			type: Number,
+			required: true,
+			min: -180,
+			max: 180,
+			set: coordinateSetter,
+		},
 	},
 	{ _id: false },
 );
@@ -115,6 +132,8 @@ const BienSchema = new Schema<BienProps>(
 		timestamps: true,
 	},
 );
+
+BienSchema.index({ 'location.coordinates.latitude': 1, 'location.coordinates.longitude': 1 });
 
 const normalizeStringArray = (values?: string[]): string[] => {
 	if (!values || values.length === 0) return [];
