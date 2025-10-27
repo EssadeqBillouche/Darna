@@ -100,9 +100,7 @@ export class UserService {
             if (user.status !== 'active') {
                 throw new Error('User account is not active');
             }
-
             
-
             const token: string = await JwtService.generateToken(user.toJSON());
 
             return token;

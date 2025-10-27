@@ -31,4 +31,14 @@ export class UserController {
             return res.status(400).json({ error: error.message });
         }
     }
+    public async login(req: Request, res: Response): Promise<Response> {
+        try {
+            
+            const token = await this.userService.login(req.body);
+
+            return res.status(200).json({ token });
+        } catch (error: any) {
+            return res.status(401).json({ message: error.message || 'Login failed' });
+        }
+    }
 }

@@ -17,8 +17,9 @@ const authService = new UserService(userRepository, emailService);
 const authController = new UserController(authService);
 const userValidator = new UserValidator();
 
-router.post('/register', authController.register.bind(authController));
 router.get('/verify-email', authController.verifyEmail.bind(authController));
 router.post('/register', upload.none(), userValidator.registerValidation(), HandleError.validate, authController.register.bind(authController));
+router.post('/login', upload.none(), authController.login.bind(authController));
+
 
 export default router
