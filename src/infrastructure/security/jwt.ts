@@ -14,7 +14,7 @@ export interface JwtPayload {
     isVerified: boolean;
 }
 
-export default class JwtService {
+class JwtService {
     private readonly secretKey: string;
     private readonly expiresIn: string;
 
@@ -77,4 +77,6 @@ export default class JwtService {
 
 
 }
+
+export default new JwtService();
 
