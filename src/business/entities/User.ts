@@ -100,6 +100,11 @@ export class User {
         this.touch();
     }
 
+    public delete(): void {
+        this._status = 'deleted';
+        this.touch();
+    }
+
     public async changePassword(oldPlain: string, newPlain: string): Promise<void> {
         const isOldValid = await bcrypt.compare(oldPlain, this._passwordHash);
         if (!isOldValid) throw new Error('Current password is incorrect');

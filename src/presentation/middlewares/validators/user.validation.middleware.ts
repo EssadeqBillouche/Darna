@@ -8,7 +8,7 @@ export class UserValidator {
     private _password: string = 'password';
     private _phoneNumber: string = 'phoneNumber';
     private _role: string = 'role';
-    private _status:string = 'status';
+    private _status: string = 'status';
 
 
     public registerValidation(): ValidationChain[] {
@@ -24,6 +24,12 @@ export class UserValidator {
             body(this._phoneNumber).notEmpty().withMessage('Phone is required'),
             body(this._role).optional().isIn(Object.values(UserRole)).withMessage(`Role must be one of ${Object.values(UserRole).join(', ')}`),
             body(this._status).optional().isIn(['active', 'suspended', 'deleted']).withMessage(`Invalid status`),
+        ]
+    }
+
+    public userStatusValidation(): ValidationChain[] {
+        return [
+            body(this._status).isIn(['active', 'suspended', 'deleted']).withMessage(`Invalid status`),
         ]
     }
 }

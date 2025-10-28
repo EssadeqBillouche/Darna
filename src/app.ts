@@ -1,7 +1,10 @@
-import express, { type Application, type Request, type Response } from 'express';
-import authRoutes from './presentation/routes/auth.routes';
-import userRoutes from './presentation/routes/users.routes';
-import bienRoutes from './presentation/routes/biens.routes';
+import express, {
+  type Application,
+  type Request,
+  type Response,
+} from "express";
+import userRoutes from "./presentation/routes/users.routes";
+import bienRoutes from "./presentation/routes/biens.routes";
 
 class App {
 	private readonly app: Application;
@@ -18,12 +21,8 @@ class App {
 	}
 
 	private configureRoutes() {
-		this.app.get('/', (req: Request, res: Response) => {
-			res.json({ status: 'ok' });
-		});
-		this.app.use('/api', authRoutes);
-		this.app.use('/api', userRoutes);
-		this.app.use('/biens', bienRoutes);
+    this.app.use("/api-v1/user", userRoutes);
+    this.app.use("/api-v1/biens", bienRoutes);
 	}
 
 	get instance() {
@@ -32,5 +31,3 @@ class App {
 }
 
 export const createApp = () => new App().instance;
-
-export default App;
