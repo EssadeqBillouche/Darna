@@ -1,7 +1,6 @@
 import { UserModel } from '../models/UserModel';
 import { User } from '../../business/entities/User';
-import { UserDTO, UserProps } from '../../business/types/User';
-import { UserRole } from '../../business/enums/Role';
+import { UserProps } from '../../business/types/User';
 
 class UserRepository {
 
@@ -12,7 +11,14 @@ class UserRepository {
 
   async findByVerificationToken(token: string): Promise<User | null> {
     const user = await UserModel.findOne({ verificationToken: token });
-    return user ? new User(user.toObject() as UserProps) : null;
+    const userData = user?.toObject();
+
+    const newObject = {
+      id: userData?._id.toString(),
+      ...userData
+    }
+    if(!user) throw new Error('User not found!'); 
+    return newObject ? new User(newObject as UserProps) : null;
   }
 
   async create(user: User): Promise<User> {
@@ -26,6 +32,8 @@ class UserRepository {
         role: user.role,
         isVerified: false,
         status: 'active',
+        verificationToken: user.verificationToken,
+        verificationTokenExpiresAt: user.verificationTokenExpiresAt
       });
       return new User(saved.toObject() as UserProps);
     } catch (error: any) {
@@ -34,6 +42,7 @@ class UserRepository {
   }
 
   async update(user: User): Promise<User> {
+    
     if (!user.id) throw new Error('Cannot update a user without an identifier');
 
     const persistence = user.toPersistence();
