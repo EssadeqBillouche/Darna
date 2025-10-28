@@ -41,7 +41,7 @@ export class UserService {
         const verificationToken = this.generateVerificationToken();
         const verificationExpiresAt = this.getVerificationExpiry();
         userEntity.setVerificationToken(verificationToken, verificationExpiresAt);
-
+        
         const savedUser = await this.userRepository.create(userEntity);
 
         await this.emailService.sendVerificationEmail({
