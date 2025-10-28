@@ -5,6 +5,7 @@ import {
 	PropertyType,
 } from '../../business/types/Bien';
 
+
 const CoordinatesSchema = new mongoose.Schema({
 	latitude: { type: Number, required: true },
 	longitude: { type: Number, required: true },

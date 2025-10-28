@@ -75,6 +75,7 @@ export interface BienProps extends BienCreationPayload {
 	updatedAt?: Date;
 }
 
+
 export interface BienDTO {
 	id?: string;
 	ownerId: string;

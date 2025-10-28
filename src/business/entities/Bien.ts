@@ -48,6 +48,7 @@ export class Bien {
 		this.createdAt = props.createdAt ?? new Date();
 		this._updatedAt = props.updatedAt ?? new Date();
 	}
+	
 
 	public static create(payload: BienCreationPayload): Bien {
 		return new Bien({
