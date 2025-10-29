@@ -11,7 +11,14 @@ class UserRepository {
 
   async findByVerificationToken(token: string): Promise<User | null> {
     const user = await UserModel.findOne({ verificationToken: token });
-    return user ? new User(user.toObject() as UserProps) : null;
+    const userData = user?.toObject();
+
+    const newObject = {
+      id: userData?._id.toString(),
+      ...userData
+    }
+    if(!user) throw new Error('User not found!'); 
+    return newObject ? new User(newObject as UserProps) : null;
   }
 
   async create(user: User): Promise<User> {
@@ -25,6 +32,8 @@ class UserRepository {
         role: user.role,
         isVerified: false,
         status: 'active',
+        verificationToken: user.verificationToken,
+        verificationTokenExpiresAt: user.verificationTokenExpiresAt
       });
       return new User(saved.toObject() as UserProps);
     } catch (error: any) {
@@ -33,6 +42,7 @@ class UserRepository {
   }
 
   async update(user: User): Promise<User> {
+    
     if (!user.id) throw new Error('Cannot update a user without an identifier');
 
     const persistence = user.toPersistence();
@@ -45,6 +55,31 @@ class UserRepository {
     );
 
     if(!updated) throw new Error('User not updated')
+    return new User(updated.toObject() as UserProps);
+  }
+
+  async getUserById(userId: string) : Promise<User> {
+    const user = await UserModel.findById(userId);
+    const userData = user?.toObject();
+
+    const newObject = {
+      id: userData?._id.toString(),
+      ...userData
+    }
+    if(!user) throw new Error('User not found!'); 
+    return new User(newObject as UserProps);
+  }
+
+  async updateStatus(user: User): Promise<User> {
+    const persistence = user.toPersistence();
+    
+    const updated = await UserModel.findByIdAndUpdate(
+      user.id,
+      persistence,
+      { new: true }
+    );
+    
+    if(!updated) throw new Error('User not updated'); 
     return new User(updated.toObject() as UserProps);
   }
 }

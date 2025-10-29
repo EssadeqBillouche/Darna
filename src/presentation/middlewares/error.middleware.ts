@@ -6,7 +6,6 @@ export class HandleError {
 
     public static validate(req: Request, res: Response, next: NextFunction) {
         const errors = validationResult(req);
-        console.log(errors);
         
         if (!errors.isEmpty()) {
             const formattedErrors: Record<string, string> = {};
