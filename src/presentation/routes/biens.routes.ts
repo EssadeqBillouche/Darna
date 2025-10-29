@@ -1,18 +1,18 @@
-import { Router } from 'express';
-import BienController from '../controllers/BienController';
+import express from 'express';
 import BienRepository from '../../persistence/repositories/BienRepository';
-import BienService from '../../business/services/BienService';
+import { BienService } from '../../business/services/BienService';
+import { BienController } from '../controllers/BienController';
 
-const router = Router();
+const router = express.Router();
 
-const bienRepository = new BienRepository();
-const bienService = new BienService(bienRepository);
-const bienController = new BienController(bienService);
+const repository = new BienRepository();
+const service = new BienService(repository);
+const controller = new BienController(service);
 
-router.post('/', bienController.create);
-router.get('/', bienController.findAll);
-router.get('/:id', bienController.findById);
-router.patch('/:id', bienController.update);
-router.delete('/:id', bienController.remove);
+router.get('/', controller.list.bind(controller));
+router.get('/:id', controller.getById.bind(controller));
+router.post('/', controller.create.bind(controller));
+router.patch('/:id', controller.update.bind(controller));
+router.delete('/:id', controller.delete.bind(controller));
 
 export default router;
