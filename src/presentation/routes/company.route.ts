@@ -19,5 +19,6 @@ const companyValidator = new CompanyValidator();
 
 // Company Routes
 router.post('/create', upload.none(), companyValidator.createCompanyValidation(), HandleError.validate, roleMiddleware.roleMiddleware(['Manager']), companyController.create.bind(companyController));
+router.get('/:id', HandleError.validate, roleMiddleware.roleMiddleware(['Manager', 'Admin', 'Client']), companyController.getById.bind(companyController));
 
 export default router

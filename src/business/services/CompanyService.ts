@@ -21,4 +21,14 @@ export class CompanyService {
       throw new Error(`Create Company Failed ${error.message}`);
     }
   }
+
+  async getCompanyById(id: string): Promise<Company | null> {
+    try {
+      if(!id) throw new Error('Company id not found');
+
+      return this.companyRepo.findById(id);
+    } catch (error: any) {
+      throw new Error(error.message)
+    }
+  }
 }
