@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-export interface Adress {
+export interface Address {
     addressLine?: string;
     city: string;
     state?: string;
@@ -9,17 +9,33 @@ export interface Adress {
 }
 
 export interface CompanyProps {
-    id?: string;
+    id?: Types.ObjectId;
     name: string;
     description?: string;
     logoUrl?: string;
-    address?: Adress;
+    address?: Address;
     phoneNumber?: string;
     email?: string;
     status: 'pending' | 'approved' | 'rejected';
     managerId: Types.ObjectId;
     employees: Types.ObjectId[];
     subscriptionPlan?: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface CompanyDTO {
+    id?: string;
+    name: string;
+    description?: string;
+    logoUrl?: string;
+    address?: Address;
+    phoneNumber?: string;
+    email?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    managerId: string;
+    employees?: string[];
+    subscriptionPlan?: string;
     createdAt: Date;
     updatedAt: Date;
 }
