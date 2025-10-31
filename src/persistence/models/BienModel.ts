@@ -44,7 +44,6 @@ const BienSchema = new mongoose.Schema<BienProps>({
 }, { timestamps: true });
 
 BienSchema.index({ status: 1, type: 1 });
-
 BienSchema.index({ title: 'text', description: 'text' });
 
 export const BienModel = mongoose.model('Bien', BienSchema);

@@ -31,12 +31,10 @@ export default class BienRepository {
 			status?: string;
 			minPrice?: number;
 			maxPrice?: number;
+			minArea?: number;
+			maxArea?: number;
 			city?: string;
-			areaMin?: number;
-			areaMax?: number;
-			latitude?: number;
-			longitude?: number;
-			radiusKm?: number;
+			address?: string;
 		};
 		sort?: string; // 'date' | 'price_asc' | 'price_desc' | 'relevance'
 		query?: string; // full text search string
@@ -57,23 +55,14 @@ export default class BienRepository {
 				if (typeof f.maxPrice === 'number') q.price.$lte = f.maxPrice;
 			}
 			if (f.city) q['location.city'] = f.city;
-
-			// area filtering
-			if (typeof f.areaMin === 'number' || typeof f.areaMax === 'number') {
+			if (typeof f.minArea === 'number' || typeof f.maxArea === 'number') {
 				q.area = {} as any;
-				if (typeof f.areaMin === 'number') q.area.$gte = f.areaMin;
-				if (typeof f.areaMax === 'number') q.area.$lte = f.areaMax;
+				if (typeof f.minArea === 'number') q.area.$gte = f.minArea;
+				if (typeof f.maxArea === 'number') q.area.$lte = f.maxArea;
 			}
-
-			// location radius filtering (approximate using bounding box)
-			if (typeof f.latitude === 'number' && typeof f.longitude === 'number' && typeof f.radiusKm === 'number') {
-				// 1 deg latitude ~= 111 km
-				const deltaLat = f.radiusKm / 111;
-				// longitude degrees vary with latitude
-				const latRad = (f.latitude * Math.PI) / 180;
-				const deltaLng = f.radiusKm / (111 * Math.cos(latRad) || 1);
-				q['location.coordinates.latitude'] = { $gte: f.latitude - deltaLat, $lte: f.latitude + deltaLat };
-				q['location.coordinates.longitude'] = { $gte: f.longitude - deltaLng, $lte: f.longitude + deltaLng };
+			if (f.address) {
+				// case-insensitive partial match on address
+				q['location.address'] = { $regex: f.address, $options: 'i' };
 			}
 		}
 

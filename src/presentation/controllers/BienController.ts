@@ -26,7 +26,10 @@ export class BienController {
 			if (q.status) filters.status = String(q.status);
 			if (q.minPrice) filters.minPrice = Number(q.minPrice);
 			if (q.maxPrice) filters.maxPrice = Number(q.maxPrice);
+			if (q.minArea) filters.minArea = Number(q.minArea);
+			if (q.maxArea) filters.maxArea = Number(q.maxArea);
 			if (q.city) filters.city = String(q.city);
+			if (q.address) filters.address = String(q.address);
 			const sort = q.sort ? String(q.sort) : undefined;
 			const query = q.q ? String(q.q) : undefined; // full text search string
 

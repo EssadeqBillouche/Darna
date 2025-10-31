@@ -30,25 +30,23 @@ export class BienService {
 					status?: string;
 					minPrice?: number;
 					maxPrice?: number;
+					minArea?: number;
+					maxArea?: number;
 					city?: string;
-					areaMin?: number;
-					areaMax?: number;
-					latitude?: number;
-					longitude?: number;
-					radiusKm?: number;
+					address?: string;
 				};
 			}): Promise<{ items: BienDTO[]; total: number; page: number; limit: number }> {
-				const page = options?.page && options.page > 0 ? options.page : 1;
-				const limit = options?.limit && options.limit > 0 ? options.limit : 20;
-				const { items, total } = await this.repository.findAll({
-					page,
-					limit,
-					filters: options?.filters,
-					sort: options?.sort,
-					query: options?.query,
-				});
-				return { items: items.map((b) => b.toJSON()), total, page, limit };
-			}
+			const page = options?.page && options.page > 0 ? options.page : 1;
+			const limit = options?.limit && options.limit > 0 ? options.limit : 20;
+			const { items, total } = await this.repository.findAll({
+				page,
+				limit,
+				filters: options?.filters,
+				sort: options?.sort,
+				query: options?.query,
+			});
+			return { items: items.map((b) => b.toJSON()), total, page, limit };
+		}
 
 	public async getById(id: string): Promise<BienDTO> {
 		const bien = await this.repository.findById(id);
