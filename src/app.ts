@@ -6,6 +6,7 @@ import express, {
 import userRoutes from "./presentation/routes/users.routes";
 import bienRoutes from "./presentation/routes/biens.routes";
 import companyRoutes from "./presentation/routes/company.route";
+import employeeRoutes from "./presentation/routes/employee.routes";
 
 class App {
   private readonly app: Application;
@@ -25,6 +26,7 @@ class App {
     this.app.use("/api-v1/user", userRoutes);
     this.app.use("/api-v1/biens", bienRoutes);
     this.app.use("/api-v1/company", companyRoutes);
+    this.app.use("/api-v1/company", employeeRoutes);
   }
 
   get instance() {
