@@ -31,8 +31,13 @@ export default class BienRepository {
 			status?: string;
 			minPrice?: number;
 			maxPrice?: number;
+			minArea?: number;
+			maxArea?: number;
 			city?: string;
+			address?: string;
 		};
+		sort?: string; // 'date' | 'price_asc' | 'price_desc' | 'relevance'
+		query?: string; // full text search string
 	}): Promise<{ items: Bien[]; total: number }> {
 		const page = options?.page && options.page > 0 ? options.page : 1;
 		const limit = options?.limit && options.limit > 0 ? options.limit : 20;
@@ -50,12 +55,53 @@ export default class BienRepository {
 				if (typeof f.maxPrice === 'number') q.price.$lte = f.maxPrice;
 			}
 			if (f.city) q['location.city'] = f.city;
+			if (typeof f.minArea === 'number' || typeof f.maxArea === 'number') {
+				q.area = {} as any;
+				if (typeof f.minArea === 'number') q.area.$gte = f.minArea;
+				if (typeof f.maxArea === 'number') q.area.$lte = f.maxArea;
+			}
+			if (f.address) {
+				// case-insensitive partial match on address
+				q['location.address'] = { $regex: f.address, $options: 'i' };
+			}
 		}
 
+		// full text search
+		if (options?.query) {
+			q.$text = { $search: options.query };
+		}
+
+		// compute sort
+		let sortObj: any = { createdAt: -1 };
+		if (options?.sort) {
+			switch (options.sort) {
+				case 'date':
+					sortObj = { createdAt: -1 };
+					break;
+				case 'price_asc':
+					sortObj = { price: 1 };
+					break;
+				case 'price_desc':
+					sortObj = { price: -1 };
+					break;
+				case 'relevance':
+					// relevance only available when using text search; otherwise fallback to date
+					if (options?.query) sortObj = { score: { $meta: 'textScore' } };
+					else sortObj = { createdAt: -1 };
+					break;
+				default:
+					sortObj = { createdAt: -1 };
+			}
+		}
+
+		// projection: include text score when doing text search
+		const projection = options?.query ? { score: { $meta: 'textScore' } } : undefined;
+
 		const [documents, total] = await Promise.all([
-			BienModel.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+			BienModel.find(q, projection).sort(sortObj).skip(skip).limit(limit).exec(),
 			BienModel.countDocuments(q).exec(),
 		]);
+
 		return { items: documents.map((doc) => this.mapDocument(doc)), total };
 	}
 
