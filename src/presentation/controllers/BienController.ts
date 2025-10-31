@@ -17,8 +17,19 @@ export class BienController {
 
 	public async list(_req: Request, res: Response): Promise<Response> {
 		try {
-			const biens = await this.service.list();
-			return res.status(200).json({ biens });
+			const q = _req.query;
+			const page = q.page ? parseInt(String(q.page), 10) : undefined;
+			const limit = q.limit ? parseInt(String(q.limit), 10) : undefined;
+			const filters: any = {};
+			if (q.ownerId) filters.ownerId = String(q.ownerId);
+			if (q.type) filters.type = String(q.type);
+			if (q.status) filters.status = String(q.status);
+			if (q.minPrice) filters.minPrice = Number(q.minPrice);
+			if (q.maxPrice) filters.maxPrice = Number(q.maxPrice);
+			if (q.city) filters.city = String(q.city);
+
+			const result = await this.service.list({ page, limit, filters });
+			return res.status(200).json(result);
 		} catch (error) {
 			return this.handleError(res, error);
 		}
