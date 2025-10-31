@@ -1,6 +1,7 @@
 import { User } from "../../business/entities/User";
 import { UserProps } from "../../business/types/User";
 import { UserModel } from "../models/UserModel";
+import { CompanyModel } from "../models/CompanyModel";
 
 export class EmployeeRepository {
   async create(user: User): Promise<User> {
@@ -20,5 +21,17 @@ export class EmployeeRepository {
     const obj = created.toObject();
     obj.id = obj._id.toString();
     return new User(obj as UserProps);
+  }
+
+  async getEmployees(companyId: string): Promise<User[]> {
+    const company = await CompanyModel.findById(companyId).populate("employees");
+
+    if (!company) throw new Error("Company not found");
+
+    const employees = (company.employees as any[]).map(
+      (emp) => new User(emp.toObject())
+    );
+
+    return employees;
   }
 }

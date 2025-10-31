@@ -23,7 +23,7 @@ export class CompanyRepository {
   }
 
   async findById(id: string): Promise<Company | null> {
-    const getCompany = await CompanyModel.findById(id).populate("managerId employees");
+    const getCompany = await CompanyModel.findById(id).populate("managerId");
     return getCompany ? new Company(getCompany.toObject() as CompanyProps) : null;
   }
 }

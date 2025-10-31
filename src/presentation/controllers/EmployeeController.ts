@@ -5,10 +5,10 @@ export class EmployeeController {
     private employeeService: EmployeeService
     constructor(employeeService: EmployeeService) {
         this.employeeService = employeeService;
-     }
+    }
 
-    
-    public async createEmployee (req: Request, res: Response) {
+
+    public async createEmployee(req: Request, res: Response) {
         try {
             const companyId = req.params.companyId;
             const { firstName, lastName, phoneNumber, role } = req.body;
@@ -36,4 +36,15 @@ export class EmployeeController {
             });
         }
     };
+
+    public async getCompanyEmployees(req: Request, res: Response) {
+        try {
+            const companyId = req.params.companyId;
+            const employees = await this.employeeService.getCompanyEmployees(companyId);
+
+            res.status(200).json({ message: "Company employees retrieved successfully", employees });
+        } catch (error: any) {
+            res.status(500).json({ error: `Failed to fetch employees ${error.message}` });
+        }
+    }
 }

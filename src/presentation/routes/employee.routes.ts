@@ -21,5 +21,6 @@ const roleMiddleware = new RoleMiddleware();
 const employeeValidator = new EmployeeValidator();
 
 router.post("/:companyId/create-employee", upload.none(), roleMiddleware.roleMiddleware(['Manager']), employeeValidator.addEmployeeValidation(), HandleError.validate, employeeController.createEmployee.bind(employeeController));
+router.get("/:companyId/employees", roleMiddleware.roleMiddleware(['Admin', 'Manager']), employeeController.getCompanyEmployees.bind(employeeController));
 
 export default router;

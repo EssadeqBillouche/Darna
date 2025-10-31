@@ -60,4 +60,12 @@ export class EmployeeService {
         )
         return { employee: savedEmployee, password }
     }
+
+    async getCompanyEmployees(companyId: string): Promise<User[]> {
+        const company = await this.companyRepo.findById(companyId);
+        if (!company) throw new Error("Company not found");
+
+        const employees = await this.employeeRepo.getEmployees(companyId);
+        return employees;
+    }
 }
