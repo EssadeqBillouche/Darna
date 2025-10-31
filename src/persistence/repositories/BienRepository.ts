@@ -32,7 +32,14 @@ export default class BienRepository {
 			minPrice?: number;
 			maxPrice?: number;
 			city?: string;
+			areaMin?: number;
+			areaMax?: number;
+			latitude?: number;
+			longitude?: number;
+			radiusKm?: number;
 		};
+		sort?: string; // 'date' | 'price_asc' | 'price_desc' | 'relevance'
+		query?: string; // full text search string
 	}): Promise<{ items: Bien[]; total: number }> {
 		const page = options?.page && options.page > 0 ? options.page : 1;
 		const limit = options?.limit && options.limit > 0 ? options.limit : 20;
@@ -50,12 +57,62 @@ export default class BienRepository {
 				if (typeof f.maxPrice === 'number') q.price.$lte = f.maxPrice;
 			}
 			if (f.city) q['location.city'] = f.city;
+
+			// area filtering
+			if (typeof f.areaMin === 'number' || typeof f.areaMax === 'number') {
+				q.area = {} as any;
+				if (typeof f.areaMin === 'number') q.area.$gte = f.areaMin;
+				if (typeof f.areaMax === 'number') q.area.$lte = f.areaMax;
+			}
+
+			// location radius filtering (approximate using bounding box)
+			if (typeof f.latitude === 'number' && typeof f.longitude === 'number' && typeof f.radiusKm === 'number') {
+				// 1 deg latitude ~= 111 km
+				const deltaLat = f.radiusKm / 111;
+				// longitude degrees vary with latitude
+				const latRad = (f.latitude * Math.PI) / 180;
+				const deltaLng = f.radiusKm / (111 * Math.cos(latRad) || 1);
+				q['location.coordinates.latitude'] = { $gte: f.latitude - deltaLat, $lte: f.latitude + deltaLat };
+				q['location.coordinates.longitude'] = { $gte: f.longitude - deltaLng, $lte: f.longitude + deltaLng };
+			}
 		}
 
+		// full text search
+		if (options?.query) {
+			q.$text = { $search: options.query };
+		}
+
+		// compute sort
+		let sortObj: any = { createdAt: -1 };
+		if (options?.sort) {
+			switch (options.sort) {
+				case 'date':
+					sortObj = { createdAt: -1 };
+					break;
+				case 'price_asc':
+					sortObj = { price: 1 };
+					break;
+				case 'price_desc':
+					sortObj = { price: -1 };
+					break;
+				case 'relevance':
+					// relevance only available when using text search; otherwise fallback to date
+					if (options?.query) sortObj = { score: { $meta: 'textScore' } };
+					else sortObj = { createdAt: -1 };
+					break;
+				default:
+					sortObj = { createdAt: -1 };
+			}
+		}
+
+		// projection: include text score when doing text search
+		const projection = options?.query ? { score: { $meta: 'textScore' } } : undefined;
+
 		const [documents, total] = await Promise.all([
-			BienModel.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+			BienModel.find(q, projection).sort(sortObj).skip(skip).limit(limit).exec(),
 			BienModel.countDocuments(q).exec(),
 		]);
+
 		return { items: documents.map((doc) => this.mapDocument(doc)), total };
 	}
 

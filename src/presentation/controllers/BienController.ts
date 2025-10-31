@@ -27,8 +27,10 @@ export class BienController {
 			if (q.minPrice) filters.minPrice = Number(q.minPrice);
 			if (q.maxPrice) filters.maxPrice = Number(q.maxPrice);
 			if (q.city) filters.city = String(q.city);
+			const sort = q.sort ? String(q.sort) : undefined;
+			const query = q.q ? String(q.q) : undefined; // full text search string
 
-			const result = await this.service.list({ page, limit, filters });
+			const result = await this.service.list({ page, limit, filters, sort, query });
 			return res.status(200).json(result);
 		} catch (error) {
 			return this.handleError(res, error);
