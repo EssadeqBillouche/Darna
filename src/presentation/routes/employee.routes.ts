@@ -7,13 +7,15 @@ import { CompanyRepository } from "../../persistence/repositories/CompanyReposit
 import { RoleMiddleware } from "../middlewares/role.middleware";
 import { EmployeeValidator } from "../middlewares/validators/employee.validation.middleware";
 import { HandleError } from "../middlewares/error.middleware";
+import { EmailService } from "../../infrastructure/notifications/email.service";
 
 const router = express.Router();
 const upload = multer();
 
 const employeeRepo = new EmployeeRepository();
 const companyRepo = new CompanyRepository();
-const employeeService = new EmployeeService(employeeRepo, companyRepo);
+const emailService = new EmailService();
+const employeeService = new EmployeeService(employeeRepo, companyRepo, emailService);
 const employeeController = new EmployeeController(employeeService);
 const roleMiddleware = new RoleMiddleware();
 const employeeValidator = new EmployeeValidator();

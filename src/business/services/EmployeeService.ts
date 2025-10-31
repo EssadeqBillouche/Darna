@@ -1,5 +1,6 @@
 import { CompanyRepository } from "../../persistence/repositories/CompanyRepository";
 import { EmployeeRepository } from "../../persistence/repositories/EmpolyeeRepository";
+import { EmailService } from "../../infrastructure/notifications/email.service";
 import { UserRole } from "../enums/Role";
 import { Company } from "../entities/Company";
 import { User } from "../entities/User";
@@ -9,7 +10,9 @@ import { UserProps } from "../types/User";
 export class EmployeeService {
     constructor(
         private readonly employeeRepo: EmployeeRepository,
-        private readonly companyRepo: CompanyRepository
+        private readonly companyRepo: CompanyRepository,
+        private readonly emailService: EmailService
+
     ) { }
 
     async createEmployee(data:
@@ -50,6 +53,11 @@ export class EmployeeService {
         if (!savedEmployee.id) throw new Error("Employee id is not defined");
         await this.companyRepo.addEmployee(companyId, savedEmployee.id);
 
+        await this.emailService.sendCredentialsEmail(
+            savedEmployee.firstName,
+            savedEmployee.email,
+            password,
+        )
         return { employee: savedEmployee, password }
     }
 }
